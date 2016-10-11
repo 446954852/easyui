@@ -1,0 +1,28 @@
+<script type="text/javascript" charset="utf-8">
+	$(function(){
+		
+		//双击关闭TAB选项卡事件 为选项卡绑定右键
+		tabClose();
+		//绑定Tab页右键菜单事件
+		tabCloseEven();
+		//一级菜单点击事件
+		firstMenuClick();
+		
+		// 导航菜单绑定初始化
+		$("#wnav").accordion( {
+			animate : false
+		});
+
+		//var firstMenuName = $('#css3menu a:first').attr('name');
+		firstMenuName = "basic";
+		//核心 通过JSON数据 生成左侧菜单
+		addNav(_menus[firstMenuName]);
+		//为左侧菜单li a绑定click事件后生成Tab页
+		InitLeftMenu();
+	});
+	
+</script>
+<div id='wnav' class="easyui-accordion" fit="true" border="false">
+		<!--  导航内容 -->
+</div>
+

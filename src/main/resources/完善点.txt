@@ -1,0 +1,2 @@
+1. mybatis分页实现
+2. dao部分抽离出Base基类(通过反射User user = sqlSession.selectOne("namespace.findUserById", 10)

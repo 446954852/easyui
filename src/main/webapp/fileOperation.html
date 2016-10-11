@@ -1,0 +1,14 @@
+<script type="text/javascript" src="js/fileOperation.js" charset="UTF-8"></script>
+<div id="userListLayout" class="easyui-layout" data-options="fit:true,border:false">
+	<div region="north" title="文件操作" style="height: 115px;overflow: hidden;" border="false">
+		<div align="center">
+		<a href="fileController/downloadFileIO" class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true">a标签IO流</a>
+		<br/>
+		<a href="fileController/downloadFileRespEntity" class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true">a标签ResponseEntity</a>
+		<br/>
+		<a href="javascript:void(0);" class="easyui-linkbutton" data-options="iconCls:'icon-redo',plain:true" onclick="downloadFileRespEntityOnClick();">click事件提交formResponseEntity</a>
+		</div>
+	</div>
+	<div region="center" style="padding:0px;overflow:hidden;" data-options="border:false">
+	</div>
+</div>

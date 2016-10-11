@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ly.easyui.dao.MenuMapper">
+	<sql id="column_Menu">
+		id AS id,
+		pid AS pid,
+		text AS text,
+		url AS url,
+		iconcls AS iconCls,
+		seq AS seq
+	</sql>
+	
+	<select id="findTopMenu" resultType="Menu">
+		select <include refid="column_Menu"/> from menu 
+		where pid is null
+	</select>
+	
+	<select id="findMenuById" parameterType="Integer" resultMap="AllMenusMap">
+		select * from menu where pid = #{id, jdbcType=NUMERIC} order by seq 
+	</select>
+	 
+	 <select id="findMenuByPid" parameterType="Integer" resultMap="AllMenusMap">
+ 		select <include refid="column_Menu"/> from menu 
+ 		where pid = #{id, jdbcType=NUMERIC}
+	 </select>
+	
+	 <select id="findAllMenus" resultMap="AllMenusMap">
+	 	select * from menu order by seq
+	 </select>
+	 
+	 <resultMap type="Menu" id="AllMenusMap">
+	 	<id column="id" property="id"/>
+	 	<result column="pid" property="pid"/>
+	 	<result column="text" property="text"/>
+	 	<result column="url" property="url"/>
+	 	<result column="iconcls" property="iconCls"/>
+	 	<result column="seq" property="seq"/>
+	 </resultMap>
+
+</mapper>

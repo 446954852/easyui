@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.1.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+	<!--  
+		需要进行 Spring 整合 SpringMVC 吗 ?
+		还是否需要再加入 Spring 的 IOC 容器 ?
+		是否需要再 web.xml 文件中配置启动 Spring IOC 容器的 ContextLoaderListener ?
+		
+		1. 需要: 通常情况下, 类似于数据源, 事务, 整合其他框架都是放在 Spring 的配置文件中(而不是放在 SpringMVC 的配置文件中).
+		实际上放入 Spring 配置文件对应的 IOC 容器中的还有 Service 和 Dao. 
+		2. 不需要: 都放在 SpringMVC 的配置文件中. 也可以分多个 Spring 的配置文件, 然后使用 import 节点导入其他的配置文件
+	-->
+	
+	<!--  
+		问题: 若 Spring 的 IOC 容器和 SpringMVC 的 IOC 容器扫描的包有重合的部分, 就会导致有的 bean 会被创建 2 次.
+		解决:
+		1. 使 Spring 的 IOC 容器扫描的包和 SpringMVC 的 IOC 容器扫描的包没有重合的部分. 
+		2. 使用 exclude-filter 和 include-filter 子节点来规定只能扫描的注解
+		(springioc中use-default-filters一定要为true要不然连基本注解都会失效(如：Component和Service)
+			需要用<context:component-scan base-package="com.ly.springmvc" use-default-filters="true">
+			<context:exclude-filter type="annotation" expression=""排除自己的)
+		(springmvcioc中use-default-filters一定要为false要不然连基本注解都会有效,
+			只需要用<context:include-filter type="annotation" expression="">包含自己的)
+	-->
+	
+	<!--  
+		SpringMVC 的 IOC 容器中的 bean 可以来引用 Spring IOC 容器中的 bean. 
+		返回来呢 ? 反之则不行. Spring IOC 容器中的 bean 却不能来引用 SpringMVC IOC 容器中的 bean!
+	-->
+	<context:component-scan base-package="com.ly.easyui" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+		<context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.RestController"/>
+		<context:include-filter type="annotation" expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
+	</context:component-scan>
+	
+	<!-- 开启aop，对类代理 -->
+	<aop:config proxy-target-class="true"/>
+	
+	
+	
+	<bean class="org.springframework.web.servlet.view.ContentNegotiatingViewResolver">
+		<property name="order" value="1" />
+<!-- 		指定是否以format参数形式如get?format=json get?format=xml -->
+		<property name="favorParameter" value="true" />
+<!-- 		忽略请求头中的Accept 由于浏览器的Accept不同 一般默认设置为true-->
+		<property name="ignoreAcceptHeader" value="true" />
+<!-- 		默认response返回的contenttype -->
+		<property name="defaultContentType" value="text/html" />
+<!-- 		指定是否以扩展名形式返回数据如get.json get.xml 默认就是true -->
+		<property name="favorPathExtension" value="true"/>
+		<property name="mediaTypes">
+			<map>
+				<entry key="xml" value="application/xml" />
+				<entry key="json" value="application/json" />
+			</map>
+		</property>
+		<property name="viewResolvers">
+			<list>
+				<bean class="org.springframework.web.servlet.view.BeanNameViewResolver" />
+				<bean
+					class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+					<property name="prefix" value="/WEB-INF/jsp/" />
+					<property name="suffix" value=".jsp" />
+				</bean>
+			</list>
+		</property>
+		<property name="defaultViews">
+			
+<!-- 	
+	数据格式的转换器部分，需要说的是，在spring的包里面有2个不同的类：SON解析器也不同如下
+org.springframework.web.servlet.view.json.MappingJacksonJsonView
+    <groupId>org.codehaus.jackson</groupId>
+
+org.springframework.web.servlet.view.json.MappingJackson2JsonView
+    <groupId>com.fasterxml.jackson.core</groupId>
+ -->
+ 			<list>
+<!-- 				<bean id="jsonView" class="org.springframework.web.servlet.view.json.MappingJackson2JsonView" /> -->
+				 <bean class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">  
+<!--                     <property name="extractValueFromSingleKeyModel" value="false"/>   -->
+<!--                     <property name="prettyPrint" value="true"/>   -->
+<!--                     <property name="contentType" value="text/plain"/>   -->
+                </bean> 
+				<bean id="xmlView" class="org.springframework.web.servlet.view.xml.MarshallingView">
+					<constructor-arg>
+						<bean class="org.springframework.oxm.jaxb.Jaxb2Marshaller">
+<!-- 							<property name="classesToBeBound"> -->
+<!-- 								<list> -->
+<!-- 									<value>com.ly.easyui.model.User</value> -->
+<!-- 								</list> -->
+<!-- 							</property> -->
+							<property name="packagesToScan">
+								<value>com.ly.easyui.model</value>
+							</property>
+						</bean>
+					</constructor-arg>
+					 
+					<!-- 
+						也可以用XStream解析器 相对应的model类的annotation也要改：类名 @XStreamAlias("user")@   属性名@XStreamAsAttributeXStreamAlias("id")
+						XStream有点问题 暂时未解决
+					<property name="marshaller">
+                        <bean class="org.springframework.oxm.xstream.XStreamMarshaller"/>
+                    </property>
+                     -->
+				</bean>
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 配置视图解析器: 如何把 handler 方法返回值解析为实际的物理视图(视图解析器的优先级最大整数) -->
+<!-- 	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver"> -->
+<!-- 		<property name="prefix" value="/WEB-INF/jsp/"/> -->
+<!-- 		<property name="suffix" value=".jsp"/> -->
+<!-- 	</bean> -->
+	<!-- 配置视图  BeanNameViewResolver 解析器: 使用视图的名字来解析视图 -->
+	<!-- 通过 order 属性来定义视图解析器的优先级, order 值越小优先级越高 -->
+<!-- 	<bean class="org.springframework.web.servlet.view.BeanNameViewResolver"> -->
+<!-- 		<property name="order" value="100"/> -->
+<!-- 	</bean> -->
+	
+	<!-- 配置直接转发的页面 -->
+	<!-- 可以直接相应转发的页面, 而无需再经过 Handler 的方法.  -->
+	<mvc:view-controller path="/success" view-name="success"/>
+	<!-- 在实际开发中通常都需配置 mvc:annotation-driven 标签 -->
+	<mvc:annotation-driven conversion-service="conversionService">
+		<!-- 处理responseBody 里面日期类型 -->  
+		<!-- 默认前台日期字符串和后台Date交互配置格式yyyy-MM-dd HH:mm:ss(jackson序列化与反序列化) -->
+        <mvc:message-converters>  
+            <bean class="org.springframework.http.converter.json.MappingJackson2HttpMessageConverter">  
+                <property name="objectMapper">  
+                    <bean class="com.fasterxml.jackson.databind.ObjectMapper">  
+                        <property name="dateFormat">  
+                            <bean class="java.text.SimpleDateFormat">  
+                                <constructor-arg type="java.lang.String" value="yyyy-MM-dd HH:mm:ss" />  
+                            </bean>  
+                        </property>  
+                    </bean>  
+                </property>  
+            </bean>  
+        </mvc:message-converters>  
+	</mvc:annotation-driven>
+	<!-- FormattingConversionServiceFactoryBean支持格式化的conversionService -->
+	<bean id="conversionService" 
+		class="org.springframework.format.support.FormattingConversionServiceFactoryBean">
+		<property name="converters">
+			<set>
+				<ref bean="stringToDateConverter"/>
+			</set>
+		</property>	
+	</bean>
+	<!--  
+		default-servlet-handler 将在 SpringMVC 上下文中定义一个 DefaultServletHttpRequestHandler,
+		它会对进入 DispatcherServlet 的请求进行筛查, 如果发现是没有经过映射的请求, 就将该请求交由 WEB 应用服务器默认的 
+		Servlet 处理. 如果不是静态资源的请求，才由 DispatcherServlet 继续处理
+
+		一般 WEB 应用服务器默认的 Servlet 的名称都是 default.
+		若所使用的 WEB 服务器的默认 Servlet 名称不是 default，则需要通过 default-servlet-name 属性显式指定
+	-->
+	<mvc:default-servlet-handler default-servlet-name="default"/>
+<!--
+	<mvc:resources mapping="/images/**" location="/images/" />  
+	<mvc:resources mapping="/css/**" location="/css/" />  
+	<mvc:resources mapping="/styles/**" location="/styles/" />  
+	<mvc:resources mapping="/js/**" location="/js/" /> 
+	 -->
+	<!-- 配置文件上传 MultipartResolver -->
+	<bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<property name="defaultEncoding" value="UTF-8"/>
+		<property name="maxUploadSize" value="10240000000"/>
+	</bean>
+	
+	<!-- 配置使用 SimpleMappingExceptionResolver 来映射异常 -->
+	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">
+		<!-- 默认值为exception -->
+		<property name="exceptionAttribute" value="exception"></property>
+		<property name="exceptionMappings">
+			<props>
+<!-- 			已经配置了MyExceptionInterceptor -->
+<!-- 				<prop key="org.apache.shiro.authz.AuthorizationException">refuse</prop> -->
+<!-- 				<prop key="java.lang.ArrayIndexOutOfBoundsException">error</prop> -->
+			</props>
+		</property>
+	</bean>	
+	
+	
+	<!-- 配置国际化资源文件 -->
+	<bean id="messageSource" class="org.springframework.context.support.ResourceBundleMessageSource">
+		<property name="basename" value="i18n"/>
+	</bean>
+
+	<!-- 配置 SessionLocalResolver -->
+	<bean id="localeResolver" class="org.springframework.web.servlet.i18n.SessionLocaleResolver"/>	
+	<!-- 配置自定义的拦截器 -->
+	<mvc:interceptors>
+		<!-- 配置 LocaleChanceInterceptor -->
+		<bean class="org.springframework.web.servlet.i18n.LocaleChangeInterceptor"></bean>
+	</mvc:interceptors>
+<!--	
+	<mvc:interceptors>
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<mvc:exclude-mapping path="/images/**"/>			
+			<mvc:exclude-mapping path="/css/**"/>			
+			<mvc:exclude-mapping path="/styles/**"/>			
+			<mvc:exclude-mapping path="/js/**"/>			
+			<mvc:exclude-mapping path="/login"/>	
+			<mvc:exclude-mapping path="/logout"/>	
+			<mvc:exclude-mapping path="/view/**"/>	
+			<mvc:exclude-mapping path="/index.html"/>	
+			<mvc:exclude-mapping path="/north.html"/>	
+			<mvc:exclude-mapping path="/west.html"/>	
+			<mvc:exclude-mapping path="/welcome.html"/>	
+			<ref bean="loginInterceptor"/>
+		</mvc:interceptor>
+		
+		<mvc:interceptor>
+			<mvc:mapping path="/**"/>
+			<mvc:exclude-mapping path="/images/**"/>			
+			<mvc:exclude-mapping path="/css/**"/>			
+			<mvc:exclude-mapping path="/styles/**"/>			
+			<mvc:exclude-mapping path="/js/**"/>			
+			<mvc:exclude-mapping path="/login"/>	
+			<mvc:exclude-mapping path="/logout"/>	
+			<mvc:exclude-mapping path="/welcome/**"/>	
+			<mvc:exclude-mapping path="/index"/>	
+			<mvc:exclude-mapping path="/welcome/index"/>	
+			<mvc:exclude-mapping path="/view/**"/>	
+			<mvc:exclude-mapping path="/index.html"/>	
+			<mvc:exclude-mapping path="/north.html"/>	
+			<mvc:exclude-mapping path="/west.html"/>	
+			<mvc:exclude-mapping path="/welcome.html"/>	
+			<ref bean="permissionInterceptor"/>
+		</mvc:interceptor>
+	</mvc:interceptors>	 
+-->	 
+</beans>

@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.ly.easyui.shiro.dao.SysRolePermissionMapper" >
+  <resultMap id="BaseResultMap" type="com.ly.easyui.shiro.model.SysRolePermission" >
+    <id column="id" property="id" jdbcType="VARCHAR" />
+    <result column="sys_role_id" property="sysRoleId" jdbcType="VARCHAR" />
+    <result column="sys_permission_id" property="sysPermissionId" jdbcType="VARCHAR" />
+  </resultMap>
+  <sql id="Base_Column_List" >
+    id, sys_role_id, sys_permission_id
+  </sql>
+  <select id="selectByPrimaryKey" resultMap="BaseResultMap" parameterType="java.lang.String" >
+    select 
+    <include refid="Base_Column_List" />
+    from sys_role_permission
+    where id = #{id,jdbcType=VARCHAR}
+  </select>
+  <delete id="deleteByPrimaryKey" parameterType="java.lang.String" >
+    delete from sys_role_permission
+    where id = #{id,jdbcType=VARCHAR}
+  </delete>
+  <insert id="insert" parameterType="com.ly.easyui.shiro.model.SysRolePermission" >
+    insert into sys_role_permission (id, sys_role_id, sys_permission_id
+      )
+    values (#{id,jdbcType=VARCHAR}, #{sysRoleId,jdbcType=VARCHAR}, #{sysPermissionId,jdbcType=VARCHAR}
+      )
+  </insert>
+  <insert id="insertSelective" parameterType="com.ly.easyui.shiro.model.SysRolePermission" >
+    insert into sys_role_permission
+    <trim prefix="(" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        id,
+      </if>
+      <if test="sysRoleId != null" >
+        sys_role_id,
+      </if>
+      <if test="sysPermissionId != null" >
+        sys_permission_id,
+      </if>
+    </trim>
+    <trim prefix="values (" suffix=")" suffixOverrides="," >
+      <if test="id != null" >
+        #{id,jdbcType=VARCHAR},
+      </if>
+      <if test="sysRoleId != null" >
+        #{sysRoleId,jdbcType=VARCHAR},
+      </if>
+      <if test="sysPermissionId != null" >
+        #{sysPermissionId,jdbcType=VARCHAR},
+      </if>
+    </trim>
+  </insert>
+  <update id="updateByPrimaryKeySelective" parameterType="com.ly.easyui.shiro.model.SysRolePermission" >
+    update sys_role_permission
+    <set >
+      <if test="sysRoleId != null" >
+        sys_role_id = #{sysRoleId,jdbcType=VARCHAR},
+      </if>
+      <if test="sysPermissionId != null" >
+        sys_permission_id = #{sysPermissionId,jdbcType=VARCHAR},
+      </if>
+    </set>
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+  <update id="updateByPrimaryKey" parameterType="com.ly.easyui.shiro.model.SysRolePermission" >
+    update sys_role_permission
+    set sys_role_id = #{sysRoleId,jdbcType=VARCHAR},
+      sys_permission_id = #{sysPermissionId,jdbcType=VARCHAR}
+    where id = #{id,jdbcType=VARCHAR}
+  </update>
+</mapper>

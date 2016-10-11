@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- 
+1、namespace必须与对应的接口全类名一致。
+2、id必须与对应接口的某个对应的方法名一致即必须要和UserMapper.java接口中的方法同名。
+  -->
+<mapper namespace="com.ly.easyui.dao.UserMapper">
+
+	<sql id="column_User">
+		userid AS userId,
+		username AS username,
+		password AS password,
+		createDateTime AS createDateTime,
+		modifyDateTime AS modifyDateTime
+	</sql>
+	
+	 <select id="findUser" parameterType="User" resultType="User">
+ 		select <include refid="column_User"/> from user
+ 		where username = #{username, jdbcType=VARCHAR}
+ 		and password = #{password, jdbcType=VARCHAR}
+	 </select>
+	 
+	 <select id="findUserById" parameterType="Long" resultType="User">
+ 		select <include refid="column_User"/> from user 
+ 		where userid = #{id, jdbcType=NUMERIC}
+	 </select>
+	 
+	 <insert id="saveUser" parameterType="User">
+	 	insert into user values (null, #{username, jdbcType=VARCHAR}, #{password, jdbcType=VARCHAR}, now(), now())
+	 </insert>
+	 
+	 <update id="updateUser" parameterType="User">
+	    update user set username = #{username, jdbcType=VARCHAR},
+	    				password = #{password, jdbcType=VARCHAR},
+	    				createDateTime = #{createDateTime, jdbcType=TIMESTAMP},
+	    				modifyDateTime = #{modifyDateTime, jdbcType=TIMESTAMP}
+	    			where userid = #{userId, jdbcType=NUMERIC}
+	 </update>
+	 
+	 <delete id="deleteUsers">
+	 	delete from user where userid in 
+	 	<foreach collection="list" index="index" item="item" open="(" close=")" separator=",">
+	 		#{item.userId, jdbcType=NUMERIC}
+	 	</foreach>
+	 </delete>
+	 
+	 
+	 <select id="findAllUsers" parameterType="User" resultType="User">
+	 	select <include refid="column_User"/> from user u
+	 	<include refid="con_User"></include>
+	 </select>
+	 
+	 <select id="findAllUserResult" resultMap="list_User">
+	 	select <include refid="column_User"/> from user u
+	 	<include refid="con_User"></include>
+	 	<include refid="order_User"></include>
+	 </select>
+	 
+	 <select id="findAllUserResultCount" resultType="Long">
+	 	select count(1) from user u
+	 	<include refid="con_User"></include>
+	 </select>
+	 
+	 <resultMap type="User" id="list_User">
+	 	<id column="userId" property="userId"/>
+	 	<id column="username" property="username"/>
+	 	<id column="password" property="password"/>
+	 </resultMap>
+	 
+	 <sql id="con_User">
+	 	<trim prefix="where" prefixOverrides="and |or ">
+	 		<if test="user!=null">
+		 		<if test="user.username != null and user.username!=''">
+<!-- 	&quot;双引号	&gt;大于号 &apos;单引号	&amp;和	&lt;小于号 -->
+<!-- 		 			and u.username like CONCAT('%',#{user.username, jdbcType=VARCHAR},'%') -->
+		 			and instr(u.username, #{user.username, jdbcType=VARCHAR}) &gt; 0
+		 		</if>
+		 		<if test="user.password != null and user.password!=''">
+		 			and u.password = #{user.password, jdbcType=VARCHAR}
+		 		</if>
+		 		<if test="user.createDateTimeStart != null and user.createDateTimeStart!=''">
+<!-- 		 		当jdbcType = DATE 时, 只传入了 年月日  jdbcType = TIMESTAMP,年月日+ 时分秒 -->
+		 			and u.createDateTime &gt;= #{user.createDateTimeStart, jdbcType=TIMESTAMP}
+		 		</if>
+		 		<if test="user.createDateTimeEnd != null and user.createDateTimeEnd!=''">
+		 			and u.createDateTime &lt;= #{user.createDateTimeEnd, jdbcType=TIMESTAMP}
+		 		</if>
+		 		<if test="user.modifyDateTimeStart != null and user.modifyDateTimeStart!=''">
+		 			and u.modifyDateTime &gt;= #{user.modifyDateTimeStart}
+		 		</if>
+		 		<if test="user.modifyDateTimeEnd != null and user.modifyDateTimeEnd!=''">
+		 			and u.modifyDateTime &lt;= #{user.modifyDateTimeEnd}
+		 		</if>
+	 		</if>
+	 	</trim>
+	 </sql>
+	 
+	 <!-- 切记 动态字段用${page.order}而不是#  statementType的预编译（PRESTATEMENT） 非预编译（STATEMENT-->
+	 <sql id="order_User">
+	 	<if test="page != null and page.order != null">
+	 		order by ${page.sort} ${page.order}
+	 		 limit #{page.startIndex, jdbcType=NUMERIC}, #{page.endIndex, jdbcType=NUMERIC}
+	 	</if>
+	 </sql>
+	 
+</mapper>
